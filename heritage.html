@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>HeritageVerse (Lo‑Fi • Enhanced • No Node)</title>
+  <style>
+    :root {
+      --ink:#0f172a; --muted:#64748b; --line:#cbd5e1; --bg:#f7f7fb; --card:#ffffff; --accent:#111827; --ring:#11182733;
+    }
+    [data-theme="dark"]{
+      --bg:#0b1220; --card:#0f172a; --ink:#e5e7eb; --muted:#94a3b8; --line:#1f2937; --accent:#e5e7eb; --ring:#e5e7eb33;
+    }
+
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{margin:0;font-family:ui-sans-serif,system-ui,Segoe UI,Roboto,Helvetica,Arial; color:var(--ink); background:var(--bg); line-height:1.45}
+
+    /* Header */
+    header{position:sticky;top:0;z-index:20;background:linear-gradient(180deg,var(--card),var(--card) 70%,transparent);border-bottom:1px solid var(--line);backdrop-filter:saturate(120%) blur(6px)}
+    .hx{display:flex;align-items:center;gap:12px;justify-content:space-between;padding:12px 16px;max-width:1120px;margin:0 auto}
+    h1{margin:0;font-size:18px;font-weight:800;letter-spacing:0.2px}
+    .sub{font-size:12px;color:var(--muted)}
+    .iconbtn{appearance:none;border:1px solid var(--line);background:var(--card);padding:8px;border-radius:10px;cursor:pointer}
+    .iconbtn:focus{outline:3px solid var(--ring)}
+
+    .container{max-width:1120px;margin:0 auto;padding:14px}
+
+    /* Controls row */
+    .controlsRow{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:10px 0}
+    .search{flex:1;display:flex;align-items:center;gap:8px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:8px 10px}
+    .search input{border:0;outline:0;background:transparent;color:var(--ink);width:100%}
+    .chip{border:1px solid var(--line);background:var(--card);padding:6px 10px;border-radius:999px;font-size:12px;color:var(--muted);cursor:pointer}
+    .chip.active{border-color:var(--accent);color:var(--accent);}
+
+    /* Cards & layout */
+    .card{background:var(--card);border:1.5px solid var(--line);border-radius:16px;padding:14px;box-shadow:0 10px 24px -18px rgba(0,0,0,.45)}
+    .grid{display:grid;gap:12px}
+    .grid-2{grid-template-columns:repeat(2,minmax(0,1fr))}
+    .grid-3{grid-template-columns:repeat(3,minmax(0,1fr))}
+    .grid-4{grid-template-columns:repeat(4,minmax(0,1fr))}
+    @media (max-width:1000px){.grid-4{grid-template-columns:repeat(2,1fr)}.grid-3{grid-template-columns:repeat(2,1fr)}}
+    @media (max-width:640px){.grid-2,.grid-3,.grid-4{grid-template-columns:1fr}}
+
+    .btn{appearance:none;border:1.5px solid var(--accent);background:transparent;color:var(--accent);padding:9px 12px;border-radius:12px;cursor:pointer;font-weight:700}
+    .btn.primary{background:var(--accent);color:var(--card)}
+    .btn.ghost{border-color:var(--line);color:var(--muted)}
+    .btn:disabled{opacity:.55;cursor:not-allowed}
+
+    .thumb{aspect-ratio:16/9;border-radius:12px;background:linear-gradient(135deg,#e5e7eb,#f1f5f9);display:flex;align-items:center;justify-content:center;color:#6b7280;font-size:12px}
+    [data-theme="dark"] .thumb{background:linear-gradient(135deg,#111827,#0b1220)}
+
+    .title{font-size:20px;font-weight:800;margin:0}
+    .muted{color:var(--muted)}
+
+    /* Progress */
+    .progress{height:8px;background:#e5e7eb;border-radius:999px;overflow:hidden}
+    [data-theme="dark"] .progress{background:#111827}
+    .bar{height:100%;background:var(--accent);width:25%;transition:width .25s ease}
+
+    /* Section switch */
+    section{display:none}
+    section.active{display:block;animation:fade .18s ease}
+    @keyframes fade{from{opacity:.6;transform:translateY(2px)}to{opacity:1;transform:none}}
+
+    /* AI Guide */
+    .guide{border:1.5px solid var(--line);border-radius:14px;background:linear-gradient(180deg,var(--card),rgba(127,127,127,.02));padding:10px}
+    .chat{height:140px;border:1px dashed var(--line);border-radius:10px;background:transparent;padding:8px;overflow:auto;font-size:13px;color:var(--ink)}
+
+    /* Badges */
+    .badge{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);border-radius:999px;padding:4px 8px;font-size:11px;color:var(--muted)}
+
+    /* Modal */
+    .modal{position:fixed;inset:0;background:rgba(0,0,0,.25);display:none;align-items:center;justify-content:center;padding:16px;z-index:30}
+    .modal.open{display:flex}
+    .modal .sheet{max-width:560px;width:100%;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px}
+
+    footer{padding:26px;text-align:center;color:var(--muted);font-size:12px}
+  </style>
+</head>
+<body>
+  <header>
+    <div class="hx">
+      <div style="display:flex;gap:8px;align-items:center">
+        <button class="iconbtn" id="homeBtn" title="Home" aria-label="Home">🏠</button>
+        <h1>HeritageVerse (Lo‑Fi • Enhanced)</h1>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <button class="iconbtn" id="aboutBtn" title="About">ℹ️</button>
+        <button class="iconbtn" id="favBtn" title="Favourites">⭐</button>
+        <button class="iconbtn" id="themeBtn" title="Toggle dark mode">🌓</button>
+      </div>
+    </div>
+  </header>
+
+  <div class="container">
+    <div class="progress"><div class="bar" id="bar"></div></div>
+
+    <div class="controlsRow">
+      <div class="search" role="search">
+        🔎 <input id="q" placeholder="Search heritage sites… (e.g., Taj)" aria-label="Search" />
+      </div>
+      <button class="chip active" data-filter="all">All</button>
+      <button class="chip" data-filter="india">India</button>
+      <button class="chip" data-filter="world">World</button>
+    </div>
+
+    <!-- HOME -->
+    <section id="home" class="active" aria-label="Home">
+      <div class="card">
+        <div class="grid grid-4" id="siteGrid"></div>
+      </div>
+    </section>
+
+    <!-- DETAILS -->
+    <section id="details" aria-label="Details">
+      <div class="card">
+        <div class="grid grid-2">
+          <div class="thumb" id="preview">3D Preview Placeholder</div>
+          <div>
+            <h2 class="title" id="siteTitle">Site Name</h2>
+            <div class="muted" id="siteLoc">Location</div>
+            <div style="display:flex;gap:8px;margin:10px 0">
+              <span class="badge">📍 <span id="siteRegion">Region</span></span>
+              <span class="badge">🏷️ Era: <span id="siteEra">—</span></span>
+              <button class="badge" id="favToggle" title="Add to favourites">⭐ Save</button>
+            </div>
+            <ul class="muted" style="margin:10px 0 16px 18px">
+              <li>Historical overview (mock)</li>
+              <li>Key highlights & timeline</li>
+              <li>Accessibility & visitor notes</li>
+            </ul>
+            <div style="display:flex;gap:10px;flex-wrap:wrap">
+              <button class="btn primary" id="startBtn">Start Experience</button>
+              <button class="btn ghost" id="backToHome">Back</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- MODE SELECT -->
+    <section id="mode" aria-label="Mode select">
+      <div class="card">
+        <div class="grid grid-3">
+          <div style="grid-column:span 2">
+            <h3 class="title">Choose Mode</h3>
+            <div class="grid grid-2" id="modeButtons"></div>
+            <p class="muted">Tip: AR works best on mobile; VR works with headsets or desktop.</p>
+          </div>
+          <div>
+            <h3 class="title">Language</h3>
+            <div class="grid grid-2" id="langButtons" style="margin-bottom:8px"></div>
+            <div style="display:flex;gap:10px;flex-wrap:wrap">
+              <button class="btn primary" id="continueToTour" disabled>Continue →</button>
+              <button class="btn ghost" id="backToDetails">Back</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TOUR -->
+    <section id="tour" aria-label="Tour">
+      <div class="card">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:12px">
+          <div>
+            <strong id="tourTitle">Site • Mode</strong>
+            <div class="muted" id="tourMeta">Guide Language: English</div>
+          </div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <button class="btn ghost" id="toggleGuide">AI Guide</button>
+            <button class="btn ghost" id="toModes">Modes</button>
+          </div>
+        </div>
+
+        <div class="thumb" style="margin-top:12px">Viewport Placeholder (3D / AR feed)</div>
+
+        <div class="grid grid-3" style="margin-top:12px">
+          <div style="grid-column:span 2" class="card" aria-label="hotspots" >
+            <div style="font-weight:700;margin-bottom:6px">Hotspots (mock)</div>
+            <ul style="margin:0 0 0 18px">
+              <li>Entrance Arch – tap to hear story</li>
+              <li>Main Dome – architectural details</li>
+              <li>Garden Layout – symmetry & design</li>
+            </ul>
+          </div>
+          <div class="card">
+            <div style="font-weight:700;margin-bottom:6px">Tour Controls (mock)</div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+              <button class="btn ghost">↺ Reset</button>
+              <button class="btn ghost">⏯ Play</button>
+              <button class="btn ghost">⤢ Fullscreen</button>
+            </div>
+          </div>
+        </div>
+
+        <div id="guide" class="guide" style="margin-top:12px; display:none">
+          <div style="font-weight:700;margin-bottom:6px">AI Guide (mock chat)</div>
+          <div class="chat" id="chat" aria-live="polite">
+            <p><strong>Guide:</strong> Welcome! Ask me anything about this site.</p>
+          </div>
+          <div style="display:flex;gap:8px;margin-top:8px">
+            <input id="question" placeholder="Type a question… (demo)" style="flex:1;padding:9px;border:1px solid var(--line);border-radius:12px;background:transparent;color:var(--ink)" />
+            <button class="btn" id="send">Send</button>
+          </div>
+        </div>
+
+        <div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-top:12px">
+          <button class="btn ghost" id="backToDetails2">◀ Back</button>
+          <button class="btn" id="restart">Restart Flow</button>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <footer>
+    Developed as part of the Design Thinking for Innovation (DTI) course at KL University. Low‑fidelity demo — single HTML, no build tools.
+  </footer>
+
+  <!-- About modal -->
+  <div class="modal" id="aboutModal" role="dialog" aria-modal="true" aria-label="About">
+    <div class="sheet">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+        <div class="title">About HeritageVerse</div>
+        <button class="iconbtn" id="aboutClose">✖️</button>
+      </div>
+      <p class="muted">Immersive AR/VR exploration of heritage sites with an AI guide. This lo‑fi prototype simulates the core flow for demos and usability tests.</p>
+      <ul class="muted" style="margin-left:18px">
+        <li>Search & filter sites</li>
+        <li>Favourites saved locally</li>
+        <li>Dark / light theme</li>
+        <li>Keyboard & screen‑reader friendly basics</li>
+      </ul>
+    </div>
+  </div>
+
+  <script>
+    // --- Data ---
+    const SITES = [
+      { id:'taj', name:'Taj Mahal', location:'Agra, India', region:'India', era:'17th c.' },
+      { id:'red', name:'Red Fort', location:'Delhi, India', region:'India', era:'17th c.' },
+      { id:'col', name:'Colosseum', location:'Rome, Italy', region:'World', era:'1st c.' },
+      { id:'giz', name:'Giza Pyramids', location:'Giza, Egypt', region:'World', era:'26th c. BCE' },
+      { id:'mac', name:'Machu Picchu', location:'Cusco, Peru', region:'World', era:'15th c.' },
+      { id:'ham', name:'Hampi Complex', location:'Karnataka, India', region:'India', era:'14th–16th c.' },
+    ];
+    const LANGS = ['English','Hindi','Telugu','Tamil','Spanish'];
+
+    // --- State ---
+    const state = { screen:'home', site:null, mode:null, lang:'English', guideOpen:false, filter:'all', q:'', favs: loadFavs(), theme: loadTheme() };
+    if(state.theme==='dark') document.documentElement.setAttribute('data-theme','dark');
+
+    // --- Helpers ---
+    const $ = sel => document.querySelector(sel);
+    const $$ = sel => Array.from(document.querySelectorAll(sel));
+    function show(screen){
+      state.screen = screen;
+      $$('section').forEach(s=>s.classList.remove('active'));
+      $('#'+screen).classList.add('active');
+      $('#bar').style.width = screen==='home'? '25%': screen==='details'? '50%': screen==='mode'? '75%':'100%';
+      render();
+    }
+
+    function render(){
+      if(state.screen==='home') renderHome();
+      if(state.screen==='details') renderDetails();
+      if(state.screen==='mode') renderMode();
+      if(state.screen==='tour') renderTour();
+    }
+
+    function loadFavs(){ try{ return JSON.parse(localStorage.getItem('hv_favs')||'[]'); }catch(e){ return []; } }
+    function saveFavs(){ localStorage.setItem('hv_favs', JSON.stringify(state.favs)); }
+    function loadTheme(){ return localStorage.getItem('hv_theme')||'light'; }
+    function saveTheme(){ localStorage.setItem('hv_theme', state.theme); }
+
+    function isFav(id){ return state.favs.includes(id); }
+    function toggleFav(id){ const i=state.favs.indexOf(id); if(i>-1) state.favs.splice(i,1); else state.favs.push(id); saveFavs(); render(); }
+
+    // --- Home ---
+    function renderHome(){
+      const grid = $('#siteGrid'); grid.innerHTML='';
+      const term = state.q.trim().toLowerCase();
+      const list = SITES.filter(s => (state.filter==='all' || s.region.toLowerCase()===state.filter) && (!term || s.name.toLowerCase().includes(term) || s.location.toLowerCase().includes(term)) );
+      if(list.length===0){
+        const empty = document.createElement('div');
+        empty.className='muted';
+        empty.style.padding='10px';
+        empty.textContent = 'No sites match your search.';
+        grid.appendChild(empty);
+      }
+      list.forEach(s=>{
+        const card = document.createElement('button');
+        card.className='card';
+        card.style.textAlign='left';
+        card.setAttribute('aria-label', s.name+' details');
+        card.innerHTML = `
+          <div class="thumb">Image Placeholder</div>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px">
+            <div>
+              <div style="font-weight:800">${s.name}</div>
+              <div class="muted" style="font-size:12px">${s.location}</div>
+            </div>
+            <button class="iconbtn" title="Save" onclick="event.stopPropagation(); toggleFav('${s.id}')">${isFav(s.id)?'⭐':'☆'}</button>
+          </div>
+          <div class="muted" style="font-size:12px;margin-top:6px">Tap to preview →</div>`;
+        card.onclick = ()=>{ state.site = s; show('details'); };
+        grid.appendChild(card);
+      });
+      // chips state
+      $$('.chip').forEach(c=>c.classList.toggle('active', c.dataset.filter===state.filter || (state.filter==='all' && c.dataset.filter==='all')));
+    }
+
+    // --- Details ---
+    function renderDetails(){
+      if(!state.site) return;
+      $('#siteTitle').textContent = state.site.name;
+      $('#siteLoc').textContent = state.site.location;
+      $('#siteRegion').textContent = state.site.region;
+      $('#siteEra').textContent = state.site.era;
+      const favBtn = $('#favToggle');
+      favBtn.textContent = (isFav(state.site.id)?'⭐ Saved':'⭐ Save');
+    }
+
+    // --- Mode ---
+    function renderMode(){
+      const modes = ['AR','VR'];
+      const mb = $('#modeButtons'); mb.innerHTML='';
+      modes.forEach(m=>{
+        const b=document.createElement('button');
+        b.className='btn ghost'; b.style.padding='22px'; b.style.borderWidth='2px';
+        if(state.mode===m){ b.classList.remove('ghost'); b.classList.add('primary'); }
+        b.innerHTML = `<div style="font-size:18px;font-weight:800">${m}</div><div class="muted" style="font-size:12px">${m==='AR'?'Overlay on real world':'Fully immersive space'}</div>`;
+        b.onclick=()=>{state.mode=m; renderMode(); $('#continueToTour').disabled=false;};
+        mb.appendChild(b);
+      });
+      const lb = $('#langButtons'); lb.innerHTML='';
+      LANGS.forEach(l=>{
+        const b=document.createElement('button');
+        b.className='btn ghost'; b.textContent=l; b.style.fontSize='13px';
+        if(state.lang===l){ b.classList.remove('ghost'); b.classList.add('primary'); }
+        b.onclick=()=>{state.lang=l; renderMode();};
+        lb.appendChild(b);
+      });
+      $('#continueToTour').disabled = !state.mode;
+    }
+
+    // --- Tour ---
+    function renderTour(){
+      $('#tourTitle').textContent = `${state.site?.name || ''} • ${state.mode || ''} Mode`;
+      $('#tourMeta').textContent = `Guide Language: ${state.lang}`;
+      $('#guide').style.display = state.guideOpen? 'block':'none';
+    }
+
+    // --- Events
+    $('#homeBtn').onclick = ()=>{ state.site=null; state.mode=null; state.lang='English'; state.guideOpen=false; show('home'); };
+    $('#backToHome').onclick = ()=> show('home');
+    $('#startBtn').onclick = ()=> show('mode');
+    $('#backToDetails').onclick = ()=> show('details');
+    $('#continueToTour').onclick = ()=> show('tour');
+    $('#toModes').onclick = ()=> show('mode');
+    $('#backToDetails2').onclick = ()=> show('details');
+    $('#restart').onclick = ()=>{ state.site=null; state.mode=null; state.lang='English'; state.guideOpen=false; show('home'); };
+
+    $('#toggleGuide').onclick = ()=>{ state.guideOpen = !state.guideOpen; renderTour(); };
+
+    // Fake AI responses
+    const canned = [
+      name=>`The ${name} is renowned for its architectural harmony and cultural significance.`,
+      name=>`A brief timeline: foundation → expansion → conservation (demo).`,
+      name=>`Fun fact about ${name}: this is placeholder copy for your usability test.`,
+    ];
+    $('#send').onclick = ()=>{
+      const q = $('#question'); const chat = $('#chat');
+      const user = q.value.trim(); if(!user) return;
+      chat.insertAdjacentHTML('beforeend', `<p><strong>You:</strong> ${user}</p>`);
+      setTimeout(()=>{
+        const fn = canned[Math.floor(Math.random()*canned.length)];
+        chat.insertAdjacentHTML('beforeend', `<p><strong>Guide:</strong> ${fn(state.site?.name||'this site')}</p>`);
+        chat.scrollTop = chat.scrollHeight;
+      }, 350);
+      q.value=''; q.focus(); chat.scrollTop = chat.scrollHeight;
+    };
+
+    // Search & filter
+    $('#q').addEventListener('input', (e)=>{ state.q = e.target.value; renderHome(); });
+    $$('.chip').forEach(c=> c.onclick = ()=>{ state.filter = c.dataset.filter; renderHome(); });
+
+    // Favourites panel
+    $('#favToggle')?.addEventListener('click', ()=>{ if(state.site) toggleFav(state.site.id); });
+    $('#favBtn').onclick = ()=>{
+      const favList = SITES.filter(s=>isFav(s.id));
+      const body = favList.length? favList.map(s=>`• ${s.name} — ${s.location}`).join('<br>') : 'No favourites yet.';
+      openAbout('Favourites', body);
+    };
+
+    // Theme
+    $('#themeBtn').onclick = ()=>{
+      state.theme = state.theme==='dark'?'light':'dark';
+      document.documentElement.setAttribute('data-theme', state.theme==='dark'?'dark':'light');
+      saveTheme();
+    };
+
+    // About modal
+    function openAbout(title, bodyHtml){
+      $('#aboutModal .title').textContent = title || 'About HeritageVerse';
+      $('#aboutModal .sheet').querySelector('p.muted').innerHTML = bodyHtml || 'Immersive AR/VR exploration prototype.';
+      $('#aboutModal').classList.add('open');
+    }
+    $('#aboutBtn').onclick = ()=> openAbout();
+    $('#aboutClose').onclick = ()=> $('#aboutModal').classList.remove('open');
+    $('#aboutModal').addEventListener('click', (e)=>{ if(e.target.id==='aboutModal') $('#aboutModal').classList.remove('open'); });
+
+    // Keyboard shortcuts
+    document.addEventListener('keydown', (e)=>{
+      if(e.key==='/' && document.activeElement.tagName!=='INPUT'){ e.preventDefault(); $('#q').focus(); }
+      if(e.key==='Escape') $('#aboutModal').classList.remove('open');
+    });
+
+    // Init
+    show('home');
+  </script>
+</body>
+</html>
